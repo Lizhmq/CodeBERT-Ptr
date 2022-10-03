@@ -31,33 +31,6 @@ from transformers import (WEIGHTS_NAME, AdamW, get_linear_schedule_with_warmup,
                           RobertaConfig, RobertaForMaskedLM, RobertaTokenizer,
                           DistilBertConfig, DistilBertForMaskedLM, DistilBertTokenizer)
 
-def mask_tokens(inputs, tokenizer, mlm_probability):
-    """ Prepare masked tokens inputs/labels for masked language modeling: 80% MASK, 10% random, 10% original. """
-    labels = inputs.clone()
-    # We sample a few tokens in each sequence for masked-LM training (with probability mlm_probability defaults to 0.15 in Bert/RoBERTa)
-    probability_matrix = torch.full(labels.shape, mlm_probability).to(inputs.device)
-    special_tokens_mask = [tokenizer.get_special_tokens_mask(val, already_has_special_tokens=True) for val in
-                           labels.tolist()]
-    probability_matrix.masked_fill_(torch.tensor(special_tokens_mask, dtype=torch.bool).to(inputs.device), value=0.0)
-    if tokenizer.pad_token is not None:
-        padding_mask = labels.eq(tokenizer.pad_token_id)
-        probability_matrix.masked_fill_(padding_mask, value=0.0)
-        
-    masked_indices = torch.bernoulli(probability_matrix).bool()
-    labels[~masked_indices] = -100  # We only compute loss on masked tokens
-
-    # 80% of the time, we replace masked input tokens with tokenizer.mask_token ([MASK])
-    indices_replaced = torch.bernoulli(torch.full(labels.shape, 0.8)).bool().to(inputs.device) & masked_indices
-    inputs[indices_replaced] = tokenizer.convert_tokens_to_ids(tokenizer.mask_token)
-
-    # 10% of the time, we replace masked input tokens with random word
-    indices_random = torch.bernoulli(torch.full(labels.shape, 0.5)).bool().to(inputs.device) & masked_indices & ~indices_replaced
-    random_words = torch.randint(len(tokenizer), labels.shape, dtype=torch.long).to(inputs.device)
-    inputs[indices_random] = random_words[indices_random]
-
-    # The rest of the time (10% of the time) we keep the masked input tokens unchanged
-    return inputs, labels
-
 
 class ClassifierDataset(Dataset):
     def __init__(self, tokenizer, args, logger, file_type='train', block_size=512):
@@ -92,19 +65,13 @@ class ClassifierDataset(Dataset):
             datas2 = pickle.load(open(datafile2, "rb"))
             labels = datas["label"]
             inputs = datas["norm"]
-            # idxs = datas["error"]
             idxs = datas["idx"]
-            # inputs = datas["raw"]
-
-            LENS = int(len(datas2["label"]) * 0.1)
+            
+            # LENS = int(len(datas2["label"]) * 0.1)
+            LENS = len(datas2["label"]
             labels2 = datas2["label"][:LENS]
             inputs2 = datas2["norm"][:LENS]
-            # idxs2 = datas2["error"][:LENS]
             idxs2 = datas2["idx"][:LENS]
-            # inputs2 = datas2["raw"]
-
-            # train_len = len(inputs)
-            # split_l = int(train_len * split_rate)
 
             if file_type == "train":
                 inputs, labels, idxs = inputs, labels, idxs
@@ -117,8 +84,6 @@ class ClassifierDataset(Dataset):
                     code = " ".join(data)
                     code_tokens = tokenizer.tokenize(code)
                     code_tokens = [tokenizer.cls_token] + code_tokens + [tokenizer.sep_token]
-                    # print(data)
-                    # print(code_tokens)
                     b_start_idxs, b_end_idxs = get_start_idxs_batched([data], [code_tokens])
                     b_start_idxs, b_end_idxs = b_start_idxs[0], b_end_idxs[0]
                     if len(b_start_idxs) == 0:
@@ -143,10 +108,6 @@ class ClassifierDataset(Dataset):
                 if idx % (length//10) == 0:
                     percent = idx / (length//10) * 10
                     logger.warning("Rank %d, load %d"%(local_rank, percent))
-                # print(code_tokens)
-                # print(code_ids)
-                # print(out_label)
-                # break
 
             if file_type == 'train':
                 logger.warning("Rank %d Training %d samples"%(local_rank, len(self.inputs)))

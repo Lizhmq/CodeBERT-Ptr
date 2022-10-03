@@ -16,22 +16,12 @@ def load_data(path):
 
 def main():
     device = torch.device("cuda", 0)
-    # path = "./save/varmis/checkpoint-52000-1.0726/model.bin"
-    # path = "./save/varmis/checkpoint-112000-1.008/model.bin"
-    # path = "./save/java/checkpoint-24000-0.352/model.bin"
-    path = "./save/pyop/checkpoint-32000-0.4451/model.bin"
-    # orig_model = torch.load(path)
-    # torch.save(orig_model.state_dict(), "tmp112.bin")
-    # del orig_model
+    path = "path/to/your/model.bin"
     model = codebert("../.code-bert-cache/codebert-base", device)
     model.load_state_dict(torch.load(path))
-    # model.load_state_dict(torch.load("tmp112.bin"))
-    # model.load_state_dict(torch.load("tmp52.bin"))
     model = model.to(device)
 
-    # data_path = "../great/test.pkl"
-    # data_path = "../bigJava/datasets/test.pkl"
-    data_path = "../CuBert/wrong_op/test.pkl"
+    data_path = "path/to/your/test.pkl"
     batch_size = 16
     data = load_data(data_path)
 
@@ -44,9 +34,7 @@ def main():
     with torch.no_grad():
         for i in tqdm(range(batch_num)):
             batch_in = data["norm"][i * batch_size:(i + 1) * batch_size]
-            # batch_in = [" ".join(tokens) for tokens in batch_in]
             labels = data["label"][i * batch_size:(i + 1) * batch_size]
-            # idxs = data["error"][i * batch_size:(i + 1) * batch_size]
             idxs = data["idx"][i * batch_size:(i + 1) * batch_size]
             batch_in, batch_out = model.preprocess(batch_in, labels, idxs)
             batch_size = len(batch_in)

@@ -1,23 +1,10 @@
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=0
 LANG=JAVA
-DATADIR=../bigJava/datasets
-# DATADIR=../great/
-# DATADIR=../CuBert/wrong_op
-# OUTPUTDIR=./save/varmis
-OUTPUTDIR=./save/java
-# PRETRAINDIR=microsoft/codebert-base-mlm
-PRETRAINDIR=../.code-bert-cache/codebert-base
-# LOGFILE=varmis.log
-LOGFILE=java.log
+DATADIR=./dataset
+PRETRAINDIR=microsoft/codebert-base-mlm
+LOGFILE=java-op.log
 PER_NODE_GPU=1
 
-# 4e-5
-# 1e-4 too big
-# varmis 2 * 4 * 8, 2epoch
-# calls 1 * 1 * 64
-# batchsize 72 better than 24
-
-# wrong op 12 * 3 * 2
 # -m torch.distributed.launch --nproc_per_node=$PER_NODE_GPU
 python  train_classifier.py \
         --data_dir=$DATADIR \
