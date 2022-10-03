@@ -2,15 +2,15 @@
 
 CodeBERT-Ptr (short for pointer) is a repo for finetuning CodeBERT for **fine-grained (token-level)** bug localization.
 
-The model is similar to ["Neural Program Repair by Jointly Learning to Localize and Repair"](https://arxiv.org/pdf/1904.01720.pdf) except that we finetune CodeBERT instead of training an LSTM model. Futhermore, we only use the model to localize bug and remove the part of repair.
+The model is **similar (which means not the same as)** to ["Neural Program Repair by Jointly Learning to Localize and Repair"](https://arxiv.org/pdf/1904.01720.pdf) except that we finetune CodeBERT instead of training an LSTM model. Futhermore, we only use the model to localize bug and remove the part of repair.
 
 Attention again! We focus on **token-level** bugs here, e.g., variable misuse, operator misuse. Here is an example:
 
 <img src="figs/eg.jpg" alt="drawing" width="500" align=center />
 
-The model use an "pointer" to predict the buggy position.
+The model uses an pointer head to predict the buggy position. Here is a demo graph of the referenced paper:
 
-
+<img src="figs/model.jpg" alt="drawing" width="500" align=center />
 
 ## Dataset
 
